@@ -1,14 +1,21 @@
 import { useEffect, useRef } from 'react'
 import type { FC } from 'react'
+import { useMediaQuery, useObjectState } from 'services'
 
 export interface Props {}
-interface State {}
+interface State {
+  isNotSupported: boolean
+}
 
 const App: FC<Props> = () => {
   const ref = useRef<HTMLDivElement>(null)
+  const [{ isNotSupported }, setState] = useObjectState<State>({
+    isNotSupported: false
+  })
+  const { sm } = useMediaQuery()
 
   const get = () => {
-    if ('geolocation' in navigator) {
+    if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition((position) => {
         // @ts-ignore
         const map = new kakao.maps.Map(ref.current, {
@@ -21,6 +28,7 @@ const App: FC<Props> = () => {
         })
       })
     } else {
+      setState({ isNotSupported: true })
     }
   }
 
@@ -29,14 +37,27 @@ const App: FC<Props> = () => {
   }, [])
   return (
     <>
-      <div className="container max-w-4xl pt-10 mx-auto">
+      {isNotSupported && (
+        <div className="fixed top-0 h-10 w-full bg-black">
+          <div className="flex h-full items-center justify-center text-xs sm:text-sm">
+            해당 브라우저는 위치 기반 API를 사용할 수 없습니다.
+          </div>
+        </div>
+      )}
+
+      <div className="container mx-auto max-w-4xl pt-10">
         <div className="mb-5">
-          <img src="/kidow-menu.svg" alt="" className="pl-6 h-7 sm:pl-0" />
+          <img src="/kidow-menu.svg" alt="" className="h-7 pl-6 sm:pl-0" />
         </div>
       </div>
 
-      <div className="container sticky top-0 max-w-4xl pb-20 mx-auto">
-        <div ref={ref} className="h-96"></div>
+      <div className="sticky top-0">
+        <div className="container sticky top-0 mx-auto max-w-4xl pb-20">
+          <div
+            className="h-96 border border-neutral-800"
+            style={sm ? undefined : { height: window.innerWidth }}
+          ></div>
+        </div>
       </div>
 
       <a
